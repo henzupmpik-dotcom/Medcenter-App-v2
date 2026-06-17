@@ -12,10 +12,10 @@ class InvoiceDetailScreen extends StatefulWidget {
   const InvoiceDetailScreen({super.key, required this.invoiceId});
 
   @override
-  State<InvoiceDetailScreen> createState() => _InvoiceDetailScreenState();
+  State<<InvoiceDetailScreen> createState() => _InvoiceDetailScreenState();
 }
 
-class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
+class _InvoiceDetailScreenState extends State<<InvoiceDetailScreen> {
   InvoiceModel? _invoice;
   bool _loading = true;
 
