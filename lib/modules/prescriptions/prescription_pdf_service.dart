@@ -261,14 +261,11 @@ class PrescriptionPdfService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/${rx.prescriptionNumber}.pdf');
     await file.writeAsBytes(bytes);
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path, mimeType: 'application/pdf')],
-        subject: 'Prescription ${rx.prescriptionNumber}',
-        text: 'Prescription from ${ClinicConfig.instance.clinicName ?? "MedCenter"}',
-      ),
-    );
-  }
+ await Share.shareXFiles(
+  [XFile(file.path, mimeType: 'application/pdf')],
+  subject: 'Prescription ${rx.prescriptionNumber}',
+  text: 'Prescription from ${ClinicConfig.instance.clinicName ?? "MedCenter"}',
+);
 
   /// Export to PDF file saved on device
   static Future<String> exportToFile(PrescriptionModel rx) async {
