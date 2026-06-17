@@ -15,7 +15,7 @@ class BillingListScreen extends StatefulWidget {
 }
 
 class _BillingListScreenState extends State<BillingListScreen> {
-  List<InvoiceModel> _invoices = [];
+  List<<InvoiceModel> _invoices = [];
   bool _loading = true;
   String _filter = 'all';
 
@@ -36,7 +36,7 @@ class _BillingListScreenState extends State<BillingListScreen> {
     }
   }
 
-  List<InvoiceModel> get _filtered {
+  List<<InvoiceModel> get _filtered {
     if (_filter == 'all') return _invoices;
     return _invoices.where((i) => i.status == _filter).toList();
   }
