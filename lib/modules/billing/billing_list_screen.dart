@@ -81,14 +81,16 @@ class _BillingListScreenState extends State<BillingListScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _filtered.isEmpty
-              ? EmptyState(
-                  icon: Icons.receipt_long_outlined,
-                  title: 'No invoices',
-                  subtitle: _filter == 'all'
-                      ? 'Invoices will appear here once created'
-                      : 'No $_filter invoices',
-                )
-              : RefreshIndicator(
+              ? 
+      EmptyState(
+  icon: Icons.receipt_long_outlined,
+  message: _filter == 'all'
+      ? 'No invoices — invoices will appear here once created'
+      : 'No $_filter invoices',
+)
+
+      
+      : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
