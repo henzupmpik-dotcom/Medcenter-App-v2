@@ -12,10 +12,10 @@ class InvoiceDetailScreen extends StatefulWidget {
   const InvoiceDetailScreen({super.key, required this.invoiceId});
 
   @override
-  State<InvoiceDetailScreen> createState() => _InvoiceDetailScreenState();
+  State<<InvoiceDetailScreen> createState() => _InvoiceDetailScreenState();
 }
 
-class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
+class _InvoiceDetailScreenState extends State<<InvoiceDetailScreen> {
   InvoiceModel? _invoice;
   bool _loading = true;
 
@@ -31,6 +31,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
       final inv = await BillingRepository.instance.getInvoice(widget.invoiceId);
       if (mounted) setState(() { _invoice = inv; _loading = false; });
     } catch (e) {
+      debugPrint('InvoiceDetailScreen _load error: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -135,9 +136,9 @@ class _InvoiceBody extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
+                        color: statusColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                        border: Border.all(color: statusColor.withOpacity(0.4)),
                       ),
                       child: Text(
                         invoice.status.toUpperCase(),
