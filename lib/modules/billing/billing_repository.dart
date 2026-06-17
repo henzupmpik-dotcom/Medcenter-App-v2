@@ -13,19 +13,19 @@ class BillingRepository {
 
   final _db = DatabaseHelper.instance;
 
-  Future<List<InvoiceItemModel>> _getItems(String invoiceId) async {
+  Future<List<<InvoiceItemModel>> _getItems(String invoiceId) async {
     final rows = await _db.query('invoice_items',
         where: 'invoice_id = ?', whereArgs: [invoiceId]);
     return rows.map(InvoiceItemModel.fromMap).toList();
   }
 
-  Future<List<PaymentModel>> _getPayments(String invoiceId) async {
+  Future<List<<PaymentModel>> _getPayments(String invoiceId) async {
     final rows = await _db.query('payments',
         where: 'invoice_id = ?', whereArgs: [invoiceId], orderBy: 'paid_at ASC');
     return rows.map(PaymentModel.fromMap).toList();
   }
 
-  Future<List<InvoiceModel>> getForPatient(String patientId) async {
+  Future<List<<InvoiceModel>> getForPatient(String patientId) async {
     final rows = await _db.rawQuery(
       '''SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
          FROM invoices i
@@ -34,7 +34,7 @@ class BillingRepository {
          ORDER BY i.date DESC''',
       [patientId],
     );
-    final List<InvoiceModel> result = [];
+    final List<<InvoiceModel> result = [];
     for (final row in rows) {
       final id = row['id'] as String;
       result.add(InvoiceModel.fromMap(row,
@@ -43,7 +43,7 @@ class BillingRepository {
     return result;
   }
 
-  Future<List<InvoiceModel>> getUnpaid() async {
+  Future<List<<InvoiceModel>> getUnpaid() async {
     final rows = await _db.rawQuery(
       '''SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
          FROM invoices i
@@ -52,7 +52,7 @@ class BillingRepository {
          ORDER BY i.date DESC
          LIMIT 100''',
     );
-    final List<InvoiceModel> result = [];
+    final List<<InvoiceModel> result = [];
     for (final row in rows) {
       final id = row['id'] as String;
       result.add(InvoiceModel.fromMap(row,
@@ -79,7 +79,7 @@ class BillingRepository {
     return {'total': total, 'by_method': byMethod};
   }
 
-  Future<InvoiceModel> createInvoice({
+  Future<<InvoiceModel> createInvoice({
     required String patientId,
     String? consultationId,
     required List<Map<String, dynamic>> items,
@@ -125,7 +125,7 @@ class BillingRepository {
 
     await _db.insert('invoices', invoice.toMap());
 
-    final List<InvoiceItemModel> itemModels = [];
+    final List<<InvoiceItemModel> itemModels = [];
     for (final item in items) {
       final itemId = KeyGenerator.uuid();
       final qty = (item['quantity'] as int?) ?? 1;
@@ -160,7 +160,7 @@ class BillingRepository {
     return InvoiceModel.fromMap(invoice.toMap(), items: itemModels);
   }
 
-  Future<PaymentModel> recordPayment({
+  Future<<PaymentModel> recordPayment({
     required String invoiceId,
     required String patientId,
     required double amount,
@@ -222,7 +222,7 @@ class BillingRepository {
     return payment;
   }
 
-  Future<InvoiceModel?> getInvoice(String id) async {
+  Future<<InvoiceModel?> getInvoice(String id) async {
     final rows = await _db.rawQuery(
       """SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
          FROM invoices i
@@ -235,7 +235,7 @@ class BillingRepository {
         items: await _getItems(id), payments: await _getPayments(id));
   }
 
-  Future<List<InvoiceModel>> listInvoices({int limit = 200}) async {
+  Future<List<<InvoiceModel>> listInvoices({int limit = 200}) async {
     final rows = await _db.rawQuery(
       """SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
          FROM invoices i
@@ -274,31 +274,4 @@ class BillingRepository {
       patientId: patientId,
       amount: invoiceTotal,
       method: 'cash',
-      paidAt: now,
-      receivedBy: currentUser.id,
-      syncVersion: 1,
-      deviceId: config.deviceId,
-    );
-
-    await _db.insert('payments', payment.toMap());
-
-    await _db.update('invoices',
-        {'status': 'paid', 'paid_at': now, 'updated_at': now, 'payment_method': 'cash'},
-        where: 'id = ?', whereArgs: [invoiceId]);
-
-    await SyncQueueManager.instance.enqueue(
-      tableName: 'payments',
-      recordId: paymentId,
-      operation: 'INSERT',
-      payload: payment.toMap(),
-      syncVersion: 1,
-    );
-
-    await AuditLogger.instance.log(
-      action: 'MARK_PAID',
-      tableName: 'invoices',
-      recordId: invoiceId,
-      newValue: <String, dynamic>{'status': 'paid', 'paid_at': now, 'payment_method': 'cash'},
-    );
-  }
-}
+      paidAt:
