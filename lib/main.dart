@@ -16,10 +16,10 @@ class MedCenterApp extends ConsumerStatefulWidget {
   const MedCenterApp({super.key});
 
   @override
-  ConsumerState<MedCenterApp> createState() => _MedCenterAppState();
+  ConsumerState<<MedCenterApp> createState() => _MedCenterAppState();
 }
 
-class _MedCenterAppState extends ConsumerState<MedCenterApp> {
+class _MedCenterAppState extends ConsumerState<<MedCenterApp> {
   bool _ready = false;
   String? _initError;
   int _retryCount = 0;
