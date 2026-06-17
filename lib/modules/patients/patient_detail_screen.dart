@@ -349,7 +349,7 @@ class _BillingTab extends StatelessWidget {
                 ),
                 title: Text(inv.invoiceNumber,
                     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: Text('R ${inv.total.toStringAsFixed(2)} • ${DateFormatter.format(inv.date)}'),
+                subtitle: Text('R ${inv.totalAmount.toStringAsFixed(2)} • ${DateFormatter.format(inv.date)}'),
                 trailing: _StatusChip(inv.status),
                 onTap: () => context.go('/billing/${inv.id}'),
               ),
