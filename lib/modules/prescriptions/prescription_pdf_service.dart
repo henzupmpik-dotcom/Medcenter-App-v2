@@ -68,12 +68,12 @@ class PrescriptionPdfService {
                       if (config.clinicAddress.isNotEmpty)
                         pw.Text(
                           config.clinicAddress,
-                          style: const pw.TextStyle(color: PdfColors.white70, fontSize: 9),
+                          style: const pw.TextStyle(color: const PdfColor(1, 1, 1, 0.7), fontSize: 9),
                         ),
                       if (config.clinicPhone.isNotEmpty)
                         pw.Text(
                           'Tel: ${config.clinicPhone}',
-                          style: const pw.TextStyle(color: PdfColors.white70, fontSize: 9),
+                          style: const pw.TextStyle(color: const PdfColor(1, 1, 1, 0.7), fontSize: 9),
                         ),
                     ],
                   ),
