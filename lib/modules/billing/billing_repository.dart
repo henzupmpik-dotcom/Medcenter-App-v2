@@ -85,7 +85,7 @@ class BillingRepository {
     required List<Map<String, dynamic>> items,
     double discount = 0,
     String? notes,
-    bool applyVat = true, // NEW: toggle VAT
+    bool applyVat = true,
   }) async {
     final id = KeyGenerator.uuid();
     final invoiceNumber = await NumberGenerator.instance.nextInvoiceNumber();
@@ -101,7 +101,6 @@ class BillingRepository {
       subtotal += qty * price;
     }
 
-    // NEW: Calculate VAT and total properly
     final taxAmount = applyVat ? subtotal * 0.15 : 0.0;
     final total = subtotal + taxAmount - discount;
 
@@ -192,7 +191,6 @@ class BillingRepository {
 
     await _db.insert('payments', payment.toMap());
 
-    // Check if invoice is now fully paid
     final invoiceRows = await _db.query('invoices',
         where: 'id = ?', whereArgs: [invoiceId], limit: 1);
     if (invoiceRows.isNotEmpty) {
@@ -224,7 +222,6 @@ class BillingRepository {
     return payment;
   }
 
-  /// V2: Get a single invoice with items and payments
   Future<<InvoiceModel?> getInvoice(String id) async {
     final rows = await _db.rawQuery(
       """SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
@@ -238,7 +235,6 @@ class BillingRepository {
         items: await _getItems(id), payments: await _getPayments(id));
   }
 
-  /// V2: List all invoices (for billing list screen)
   Future<List<<InvoiceModel>> listInvoices({int limit = 200}) async {
     final rows = await _db.rawQuery(
       """SELECT i.*, p.full_name as patient_name, p.file_number as patient_file_number
@@ -257,13 +253,11 @@ class BillingRepository {
     return result;
   }
 
-  /// V2: Mark invoice as fully paid instantly — NOW CREATES A PAYMENT RECORD
   Future<void> markPaid(String invoiceId) async {
     final now = DateTime.now().toIso8601String();
     final config = ClinicConfig.instance;
     final currentUser = AuthService.instance.currentUser!;
 
-    // Get invoice details to create proper payment
     final invoiceRows = await _db.query('invoices',
         where: 'id = ?', whereArgs: [invoiceId], limit: 1);
     if (invoiceRows.isEmpty) throw StateError('Invoice not found');
@@ -271,7 +265,6 @@ class BillingRepository {
     final invoiceTotal = ((invoiceRows.first['total_amount'] ?? invoiceRows.first['total']) as num?)?.toDouble() ?? 0;
     final patientId = invoiceRows.first['patient_id'] as String;
 
-    // Create a payment record for the full amount
     final paymentId = KeyGenerator.uuid();
     final receiptNumber = await NumberGenerator.instance.nextReceiptNumber();
     final payment = PaymentModel(
@@ -280,7 +273,7 @@ class BillingRepository {
       invoiceId: invoiceId,
       patientId: patientId,
       amount: invoiceTotal,
-      method: 'cash', // Default method — adjust as needed
+      method: 'cash',
       paidAt: now,
       receivedBy: currentUser.id,
       syncVersion: 1,
@@ -289,7 +282,6 @@ class BillingRepository {
 
     await _db.insert('payments', payment.toMap());
 
-    // Update invoice status
     await _db.update('invoices',
         {'status': 'paid', 'paid_at': now, 'updated_at': now, 'payment_method': 'cash'},
         where: 'id = ?', whereArgs: [invoiceId]);
