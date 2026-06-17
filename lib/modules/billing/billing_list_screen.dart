@@ -15,7 +15,7 @@ class BillingListScreen extends StatefulWidget {
 }
 
 class _BillingListScreenState extends State<BillingListScreen> {
-  List<InvoiceModel> _invoices = [];
+  List<<InvoiceModel> _invoices = [];
   bool _loading = true;
   String _filter = 'all'; // all | unpaid | paid | overdue
 
@@ -31,11 +31,12 @@ class _BillingListScreenState extends State<BillingListScreen> {
       final all = await BillingRepository.instance.listInvoices();
       if (mounted) setState(() { _invoices = all; _loading = false; });
     } catch (e) {
+      debugPrint('BillingListScreen _load error: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  List<InvoiceModel> get _filtered {
+  List<<InvoiceModel> get _filtered {
     if (_filter == 'all') return _invoices;
     return _invoices.where((i) => i.status == _filter).toList();
   }
@@ -67,10 +68,10 @@ class _BillingListScreenState extends State<BillingListScreen> {
                             color: selected ? Colors.white : Colors.white70)),
                     selected: selected,
                     onSelected: (_) => setState(() => _filter = f),
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
-                    selectedColor: Colors.white.withValues(alpha: 0.3),
+                    backgroundColor: Colors.white.withOpacity(0.15),
+                    selectedColor: Colors.white.withOpacity(0.3),
                     checkmarkColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    side: BorderSide(color: Colors.white.withOpacity(0.3)),
                   ),
                 );
               }).toList(),
@@ -81,16 +82,13 @@ class _BillingListScreenState extends State<BillingListScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _filtered.isEmpty
-              ? 
-      EmptyState(
-  icon: Icons.receipt_long_outlined,
-  message: _filter == 'all'
-      ? 'No invoices — invoices will appear here once created'
-      : 'No $_filter invoices',
-)
-
-      
-      : RefreshIndicator(
+              ? EmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  message: _filter == 'all'
+                      ? 'No invoices — invoices will appear here once created'
+                      : 'No $_filter invoices',
+                )
+              : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
@@ -155,9 +153,9 @@ class _InvoiceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                  border: Border.all(color: color.withOpacity(0.3)),
                 ),
                 child: Text(
                   invoice.status.toUpperCase(),
