@@ -24,7 +24,6 @@ class PrescriptionPdfService {
         margin: const pw.EdgeInsets.all(28),
         build: (context) => pw.Stack(
           children: [
-            // V2: CONFIDENTIAL watermark
             pw.Center(
               child: pw.Transform.rotate(
                 angle: -0.5,
@@ -41,12 +40,9 @@ class PrescriptionPdfService {
                 ),
               ),
             ),
-
-            // Main content
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // Clinic letterhead (from Settings — never hardcoded)
                 pw.Container(
                   width: double.infinity,
                   padding: const pw.EdgeInsets.all(14),
@@ -79,8 +75,6 @@ class PrescriptionPdfService {
                   ),
                 ),
                 pw.SizedBox(height: 14),
-
-                // Rx # and date
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
@@ -108,8 +102,6 @@ class PrescriptionPdfService {
                   ],
                 ),
                 pw.SizedBox(height: 10),
-
-                // Patient + Doctor info
                 pw.Container(
                   width: double.infinity,
                   padding: const pw.EdgeInsets.all(10),
@@ -133,8 +125,6 @@ class PrescriptionPdfService {
                   ),
                 ),
                 pw.SizedBox(height: 12),
-
-                // Medications heading
                 pw.Text(
                   'Medications',
                   style: pw.TextStyle(
@@ -145,8 +135,6 @@ class PrescriptionPdfService {
                 ),
                 pw.SizedBox(height: 6),
                 pw.Divider(color: PdfColors.blue100, thickness: 0.5),
-
-                // Each medication (V2: includes route and refills)
                 ...rx.items.asMap().entries.map((e) {
                   final item = e.value;
                   final i = e.key + 1;
@@ -191,7 +179,6 @@ class PrescriptionPdfService {
                     ),
                   );
                 }),
-
                 if (rx.notes != null && rx.notes!.isNotEmpty) ...[
                   pw.SizedBox(height: 6),
                   pw.Text(
@@ -199,10 +186,7 @@ class PrescriptionPdfService {
                     style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
                   ),
                 ],
-
                 pw.Spacer(),
-
-                // V2: Doctor signature block
                 pw.Divider(thickness: 0.5),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -248,26 +232,24 @@ class PrescriptionPdfService {
         child: pw.Text(text, style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
       );
 
-  /// Print via system print dialog (supports AirPrint / Wi-Fi printers)
   static Future<void> printPrescription(PrescriptionModel rx) async {
     final pdf = await buildPdf(rx);
     await Printing.layoutPdf(onLayout: (_) => pdf.save());
   }
 
-  /// Share via Android share sheet (WhatsApp, Email, Telegram, etc.)
   static Future<void> sharePrescription(PrescriptionModel rx) async {
     final pdf = await buildPdf(rx);
     final bytes = await pdf.save();
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/${rx.prescriptionNumber}.pdf');
     await file.writeAsBytes(bytes);
- await Share.shareXFiles(
-  [XFile(file.path, mimeType: 'application/pdf')],
-  subject: 'Prescription ${rx.prescriptionNumber}',
-  text: 'Prescription from ${ClinicConfig.instance.clinicName ?? "MedCenter"}',
-);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/pdf')],
+      subject: 'Prescription ${rx.prescriptionNumber}',
+      text: 'Prescription from ${ClinicConfig.instance.clinicName ?? "MedCenter"}',
+    );
+  }
 
-  /// Export to PDF file saved on device
   static Future<String> exportToFile(PrescriptionModel rx) async {
     final pdf = await buildPdf(rx);
     final bytes = await pdf.save();
