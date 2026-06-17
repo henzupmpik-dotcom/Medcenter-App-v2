@@ -16,12 +16,15 @@ class MedCenterApp extends ConsumerStatefulWidget {
   const MedCenterApp({super.key});
 
   @override
-  ConsumerState<MedCenterApp> createState() => _MedCenterAppState();
+  ConsumerState<<MedCenterApp> createState() => _MedCenterAppState();
 }
 
-class _MedCenterAppState extends ConsumerState<MedCenterApp> {
+class _MedCenterAppState extends ConsumerState<<MedCenterApp> {
   bool _ready = false;
   String? _initError;
+  int _retryCount = 0;
+  static const int _maxRetries = 3;
+  bool _isRetrying = false;
 
   @override
   void initState() {
@@ -37,39 +40,74 @@ class _MedCenterAppState extends ConsumerState<MedCenterApp> {
       await ClinicConfig.instance.load();
       // Start background services (only if clinic is configured)
       await _startServices();
-    } catch (e) {
-      if (mounted) setState(() => _initError = e.toString());
+    } catch (e, stackTrace) {
+      debugPrint('Init error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) setState(() => _initError = '$e\n\n$stackTrace');
       return;
     }
-    if (mounted) setState(() => _ready = true);
+    if (mounted) setState(() {
+      _ready = true;
+      _retryCount = 0;
+    });
   }
 
   Future<void> _startServices() async {
     if (!ClinicConfig.instance.isConfigured) return;
     try {
       await ApiServer.instance.start();
-    } catch (e) {
-      // Port may already be in use on re-launch — not fatal
+    } catch (e, stackTrace) {
+      // Port may already be in use on re-launch — not fatal but warn
       debugPrint('ApiServer start error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      // Show warning but don't block app startup
+      _showServiceWarning('API Server', e.toString());
     }
     try {
       await SyncEngine.instance.start();
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('SyncEngine start error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      _showServiceWarning('Sync Engine', e.toString());
     }
   }
 
-  @override
-  void dispose() {
-    ApiServer.instance.stop();
-    SyncEngine.instance.stop();
-    super.dispose();
+  void _showServiceWarning(String serviceName, String error) {
+    // Post-frame callback to show warning after build completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$serviceName failed to start: $error'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _startServices,
+              textColor: Colors.white,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _retryInit() async {
+    if (_isRetrying || _retryCount >= _maxRetries) return;
+    setState(() {
+      _isRetrying = true;
+      _initError = null;
+      _ready = false;
+      _retryCount++;
+    });
+    await _init();
+    if (mounted) setState(() => _isRetrying = false);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_initError != null) {
-      // Show error so the user isn't left on a blank blue screen
+      final bool canRetry = _retryCount < _maxRetries && !_isRetrying;
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
@@ -90,18 +128,30 @@ class _MedCenterAppState extends ConsumerState<MedCenterApp> {
                   const SizedBox(height: 8),
                   Text(
                     _initError!,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() { _initError = null; _ready = false; });
-                      _init();
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppTheme.darkBlue),
-                    child: const Text('Retry'),
-                  ),
+                  if (canRetry)
+                    ElevatedButton(
+                      onPressed: _retryInit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppTheme.darkBlue,
+                      ),
+                      child: Text('Retry (${_maxRetries - _retryCount} left)'),
+                    )
+                  else if (_isRetrying)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  else
+                    Text(
+                      'Max retries reached. Please restart the app.',
+                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                    ),
                 ],
               ),
             ),
@@ -111,7 +161,6 @@ class _MedCenterAppState extends ConsumerState<MedCenterApp> {
     }
 
     if (!_ready) {
-      // Visible splash instead of blank blue
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
@@ -124,7 +173,7 @@ class _MedCenterAppState extends ConsumerState<MedCenterApp> {
                   width: 88,
                   height: 88,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: const Icon(Icons.local_hospital, size: 52, color: Colors.white),
@@ -132,7 +181,12 @@ class _MedCenterAppState extends ConsumerState<MedCenterApp> {
                 const SizedBox(height: 24),
                 const Text(
                   'MedCenter',
-                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 const SizedBox(
