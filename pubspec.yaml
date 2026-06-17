@@ -1,0 +1,74 @@
+name: medcenter
+description: MedCenter - Medical Centre Management Application
+publish_to: 'none'
+version: 2.0.0+2
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Database
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  path_provider: ^2.1.3
+
+  # In-app API Server
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+
+  # HTTP Client for peer sync
+  dio: ^5.4.3+1
+
+  # UDP peer discovery
+  udp: ^4.0.0
+
+  # Background sync (Android/iOS)
+  workmanager: ^0.9.0+3
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.2.7
+
+  # PDF Generation + Print + Share (V2)
+  pdf: ^3.11.1
+  printing: ^5.13.1
+  share_plus: ^10.0.0
+
+  # Charts for Dashboard (V2)
+  fl_chart: ^0.69.0
+
+  # QR Code
+  qr_flutter: ^4.1.0
+
+  # File & Image picking
+  file_picker: ^8.0.6
+  image_picker: ^1.1.2
+
+  # Security
+  flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.3
+
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
+  # Formatting
+  intl: ^0.19.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

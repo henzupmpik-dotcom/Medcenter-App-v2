@@ -1,0 +1,104 @@
+workflows:
+
+  # ── Debug build — no signing required, runs immediately ─────────────────────
+  android-debug:
+    name: MedCenter Android Debug
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      java: 17
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "flutter.buildMode=debug" >> android/local.properties
+          echo "flutter.versionName=1.0.0" >> android/local.properties
+          echo "flutter.versionCode=$BUILD_NUMBER" >> android/local.properties
+
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Flutter analyze
+        script: flutter analyze --no-fatal-infos
+        ignore_failure: true
+
+      - name: Run tests
+        script: flutter test
+        ignore_failure: true
+
+      - name: Build debug APK
+        script: |
+          flutter build apk --debug \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-debug.apk
+
+    publishing:
+      email:
+        recipients:
+          - henzupmplk@dotcom.com
+        notify:
+          success: true
+          failure: true
+
+  # ── Release build — requires keystore configured in Codemagic ───────────────
+  android-release:
+    name: MedCenter Android Release
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      java: 17
+      android_signing:
+        - medcenter_keystore          # Configure in Codemagic → Code signing
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "flutter.buildMode=release" >> android/local.properties
+          echo "flutter.versionName=1.0.0" >> android/local.properties
+          echo "flutter.versionCode=$BUILD_NUMBER" >> android/local.properties
+
+      - name: Set up key.properties for signing
+        script: |
+          # Codemagic injects CM_KEYSTORE_PATH, CM_KEY_ALIAS, CM_KEY_PASSWORD,
+          # CM_KEYSTORE_PASSWORD when android_signing is configured above
+          cat >> android/key.properties << KEYEOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          KEYEOF
+
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Flutter analyze
+        script: flutter analyze --no-fatal-infos
+        ignore_failure: true
+
+      - name: Build release APK
+        script: |
+          flutter build apk --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER
+
+      - name: Build App Bundle (AAB)
+        script: |
+          flutter build appbundle --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
+      - build/app/outputs/mapping/release/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - henzupmplk@dotcom.com
+        notify:
+          success: true
+          failure: true
