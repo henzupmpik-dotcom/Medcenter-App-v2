@@ -120,7 +120,6 @@ class _InvoiceBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // --- Invoice Header Card ---
         Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
@@ -164,7 +163,6 @@ class _InvoiceBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // --- Line Items ---
         Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
@@ -175,7 +173,6 @@ class _InvoiceBody extends StatelessWidget {
                 const Text('Line Items',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF546E7A))),
                 const SizedBox(height: 10),
-                // Header row
                 Row(children: const [
                   Expanded(flex: 4, child: Text('Description', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF78909C)))),
                   SizedBox(width: 8),
@@ -205,7 +202,6 @@ class _InvoiceBody extends StatelessWidget {
                     ]),
                   )),
                 const Divider(height: 16),
-                // Subtotal / Tax / Total
                 _AmountRow(label: 'Subtotal', amount: fmt.format(invoice.subtotal)),
                 if (invoice.taxAmount > 0)
                   _AmountRow(label: 'VAT (15%)', amount: fmt.format(invoice.taxAmount)),
@@ -231,7 +227,6 @@ class _InvoiceBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // --- Payment Method ---
         if (invoice.paymentMethod != null || invoice.medicalAidName != null)
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -261,7 +256,6 @@ class _InvoiceBody extends StatelessWidget {
         if (invoice.paymentMethod != null || invoice.medicalAidName != null)
           const SizedBox(height: 12),
 
-        // --- Notes ---
         if (invoice.notes != null && invoice.notes!.isNotEmpty)
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -281,7 +275,6 @@ class _InvoiceBody extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // --- Actions ---
         if (invoice.status != 'paid') ...[
           ElevatedButton.icon(
             onPressed: onMarkPaid,
