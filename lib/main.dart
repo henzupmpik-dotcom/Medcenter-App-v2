@@ -34,11 +34,8 @@ class _MedCenterAppState extends ConsumerState<<MedCenterApp> {
 
   Future<void> _init() async {
     try {
-      // Init database
       await DatabaseHelper.instance.init();
-      // Load clinic config
       await ClinicConfig.instance.load();
-      // Start background services (only if clinic is configured)
       await _startServices();
     } catch (e, stackTrace) {
       debugPrint('Init error: $e');
@@ -57,10 +54,8 @@ class _MedCenterAppState extends ConsumerState<<MedCenterApp> {
     try {
       await ApiServer.instance.start();
     } catch (e, stackTrace) {
-      // Port may already be in use on re-launch — not fatal but warn
       debugPrint('ApiServer start error: $e');
       debugPrintStack(stackTrace: stackTrace);
-      // Show warning but don't block app startup
       _showServiceWarning('API Server', e.toString());
     }
     try {
@@ -73,7 +68,6 @@ class _MedCenterAppState extends ConsumerState<<MedCenterApp> {
   }
 
   void _showServiceWarning(String serviceName, String error) {
-    // Post-frame callback to show warning after build completes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
